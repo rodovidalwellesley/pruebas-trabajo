@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acuerdo de evaluación laboral</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background-color: #f4f5f7; margin: 0; padding: 20px; color: #222222; }
+  .container { max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; border: 1px solid #e0e0e0; overflow: hidden; }
+  .header { background-color: #1F4E79; color: #ffffff; padding: 20px 24px; }
+  .header h1 { margin: 0; font-size: 18px; font-weight: bold; }
+  .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
+  .body { padding: 24px; }
+  label { display: block; font-size: 13px; color: #555555; margin: 14px 0 4px; }
+  input, select, textarea { width: 100%; padding: 10px; font-size: 14px; border: 1px solid #cccccc; border-radius: 6px; font-family: Arial, sans-serif; }
+  textarea { resize: vertical; }
+  button { margin-top: 20px; width: 100%; padding: 12px; font-size: 15px; font-weight: bold; color: #ffffff; background-color: #1F4E79; border: none; border-radius: 6px; cursor: pointer; }
+  button:hover { background-color: #163a5c; }
+  button:disabled { background-color: #999999; cursor: not-allowed; }
+  .result-box { margin-top: 20px; padding: 14px; background-color: #EAF6EE; border-radius: 6px; border-left: 4px solid #2E7D32; display: none; }
+  .result-box.show { display: block; }
+  .result-box textarea { margin-top: 8px; padding: 8px; font-size: 12px; min-height: 70px; }
+  .copy-btn { margin-top: 8px; width: auto; padding: 8px 14px; font-size: 13px; background-color: #2E7D32; }
+  .copy-btn:hover { background-color: #245f27; }
+  h2 { color: #1F4E79; font-size: 16px; border-bottom: 2px solid #1F4E79; padding-bottom: 6px; margin-top: 28px; }
+  p { font-size: 14px; line-height: 1.6; }
+  ul { font-size: 14px; line-height: 1.7; padding-left: 20px; }
+  .note { background-color: #FFF4CE; border: 1px solid #e6d27a; border-radius: 6px; padding: 12px 14px; font-size: 13px; margin: 16px 0; }
+  .actividades-hint { font-size: 12px; color: #777777; margin: 2px 0 4px; }
+  .field-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .field-row > div { flex: 1; min-width: 140px; }
+  .confirm-box { margin-top: 24px; padding: 16px; background-color: #f0f4f8; border-radius: 8px; border: 1px solid #d5dde5; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; }
+  .checkbox-row input { width: auto; margin-top: 3px; }
+  .checkbox-row label { margin: 0; font-size: 13px; color: #333333; }
+  .success-screen { text-align: center; padding: 40px 24px; }
+  .error-text { color: #b00020; font-size: 13px; margin-top: 10px; display: none; }
+  .error-text.show { display: block; }
+  .sign-line { margin-top: 30px; border-top: 1px solid #cccccc; padding-top: 8px; font-size: 12px; color: #777777; }
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const EMAILJS_SERVICE_ID = "service_6a5wx5h";
+const EMAILJS_TEMPLATE_ID = "template_awrsdrk";
+const EMAILJS_PUBLIC_KEY = "lyPHEcNzl1hqp9pzA";
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// ─────────────────────────────────────────────
+// ACTIVIDADES POR PUESTO — editá acá para personalizar
+// Cada línea es un ítem de la lista del acuerdo.
+// ─────────────────────────────────────────────
+const ACTIVIDADES = {
+  "Cajero/a": [
+    "Manejo de caja registradora y sistema de cobros.",
+    "Recepción de pagos en efectivo, tarjeta y transferencia.",
+    "Control y cierre de caja al finalizar el turno.",
+    "Atención al cliente en el punto de cobro.",
+    "Cumplimiento de procedimientos internos de seguridad.",
+    "Mantenimiento del orden y limpieza del sector de caja."
+  ],
+  "Camarero/a": [
+    "Toma de pedidos y atención de mesas.",
+    "Servicio de alimentos y bebidas.",
+    "Coordinación con el sector de cocina y barra.",
+    "Mantenimiento del orden y limpieza del salón.",
+    "Manejo de comanda y sistema de pedidos.",
+    "Trato respetuoso y cordial con clientes."
+  ],
+  "Camarero/a de barra": [
+    "Atención de clientes en la barra.",
+    "Preparación y servicio de bebidas no alcohólicas y alcohólicas simples.",
+    "Mantenimiento del orden y stock de la barra.",
+    "Coordinación con camareros/as de salón.",
+    "Limpieza y organización del sector de barra.",
+    "Cumplimiento de normas de higiene y manipulación de alimentos."
+  ],
+  "Bachero/a": [
+    "Lavado y secado de vajilla, cubiertos y utensilios.",
+    "Clasificación y disposición de residuos.",
+    "Limpieza de mesadas, pisos y sector de lavado.",
+    "Organización y guarda de material limpio.",
+    "Apoyo general al sector de cocina.",
+    "Cumplimiento de normas de higiene y seguridad."
+  ],
+  "Bachero/a - Ayudante de cocina": [
+    "Lavado y secado de vajilla, cubiertos y utensilios.",
+    "Limpieza y organización del sector de cocina.",
+    "Apoyo en la preparación básica de ingredientes.",
+    "Clasificación y disposición de residuos.",
+    "Seguimiento de instrucciones del/la cocinero/a a cargo.",
+    "Cumplimiento de normas de higiene y seguridad alimentaria."
+  ],
+  "Ayudante de cocina": [
+    "Preparación y mise en place de ingredientes.",
+    "Apoyo en la elaboración de platos bajo supervisión.",
+    "Manipulación correcta de alimentos y utensilios.",
+    "Mantenimiento del orden y limpieza del sector.",
+    "Seguimiento de recetas e instrucciones del/la cocinero/a.",
+    "Cumplimiento de normas de higiene y seguridad alimentaria."
+  ],
+  "Bartender": [
+    "Preparación de cócteles y bebidas según carta.",
+    "Atención de clientes en la barra.",
+    "Manejo y control de stock de insumos.",
+    "Mantenimiento del orden y limpieza de la barra.",
+    "Conocimiento de técnicas básicas de coctelería.",
+    "Cumplimiento de normas de higiene y manipulación de bebidas."
+  ]
+};
+
+const PUESTOS = Object.keys(ACTIVIDADES);
+
+function getParams() { return new URLSearchParams(window.location.search); }
+
+function buildLink(data) {
+  const base = window.location.origin + window.location.pathname;
+  return base + "?" + new URLSearchParams(data).toString();
+}
+
+function formatFecha(f) {
+  if (!f) return "";
+  const [y, m, d] = f.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function renderGenerator() {
+  const opcionesPuestos = PUESTOS.map(p => `<option value="${p}">${p}</option>`).join("");
+  const primerasActividades = ACTIVIDADES[PUESTOS[0]].join("\n");
+
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <h1>Generador de acuerdo de evaluación laboral</h1>
+      <p>Completá los datos del candidato y la prueba para generar el link</p>
+    </div>
+    <div class="body">
+      <label>Nombre completo del candidato</label>
+      <input type="text" id="g_nombre" placeholder="Juan Pérez">
+
+      <label>DNI</label>
+      <input type="text" id="g_dni" placeholder="30123456">
+
+      <label>Puesto</label>
+      <select id="g_puesto">${opcionesPuestos}</select>
+
+      <label>Actividades a realizar</label>
+      <p class="actividades-hint">Se cargaron automáticamente según el puesto. Podés editarlas antes de generar el link. Una actividad por línea.</p>
+      <textarea id="g_actividades" rows="7">${primerasActividades}</textarea>
+
+      <div class="field-row">
+        <div>
+          <label>Fecha de la prueba</label>
+          <input type="date" id="g_fecha">
+        </div>
+        <div>
+          <label>Horario de inicio</label>
+          <input type="time" id="g_horaInicio">
+        </div>
+        <div>
+          <label>Horario de fin</label>
+          <input type="time" id="g_horaFin">
+        </div>
+      </div>
+
+      <label>Local / Establecimiento</label>
+      <input type="text" id="g_local" placeholder="Sucursal Palermo">
+
+      <label>Empresa</label>
+      <input type="text" id="g_empresa" placeholder="Nombre de la empresa">
+
+      <div class="field-row">
+        <div>
+          <label>Modalidad de pago</label>
+          <select id="g_modalidad">
+            <option value="Por jornada de evaluación">Por jornada de evaluación</option>
+            <option value="Diaria">Diaria</option>
+            <option value="Otra">Otra</option>
+          </select>
+        </div>
+        <div>
+          <label>Monto ($)</label>
+          <input type="text" id="g_monto" placeholder="10000">
+        </div>
+      </div>
+
+      <button id="g_generar">Generar link para el candidato</button>
+
+      <div class="result-box" id="g_resultado">
+        <strong>Link generado — copialo y mandalo por WhatsApp:</strong>
+        <textarea id="g_linkOutput" readonly></textarea>
+        <button class="copy-btn" id="g_copiar">Copiar link</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("g_puesto").addEventListener("change", function() {
+    const acts = ACTIVIDADES[this.value];
+    if (acts) document.getElementById("g_actividades").value = acts.join("\n");
+  });
+
+  document.getElementById("g_generar").addEventListener("click", () => {
+    const nombre = document.getElementById("g_nombre").value.trim();
+    const dni = document.getElementById("g_dni").value.trim();
+    const puesto = document.getElementById("g_puesto").value;
+    const actividades = document.getElementById("g_actividades").value.trim();
+    const fecha = document.getElementById("g_fecha").value;
+    const horaInicio = document.getElementById("g_horaInicio").value;
+    const horaFin = document.getElementById("g_horaFin").value;
+    const local = document.getElementById("g_local").value.trim();
+    const empresa = document.getElementById("g_empresa").value.trim();
+    const modalidad = document.getElementById("g_modalidad").value;
+    const monto = document.getElementById("g_monto").value.trim();
+
+    if (!nombre || !dni || !fecha || !horaInicio || !local || !empresa || !monto || !actividades) {
+      alert("Completá todos los campos antes de generar el link.");
+      return;
+    }
+
+    const link = buildLink({ nombre, dni, puesto, actividades, fecha, horaInicio, horaFin, local, empresa, modalidad, monto });
+    document.getElementById("g_linkOutput").value = link;
+    document.getElementById("g_resultado").classList.add("show");
+  });
+
+  document.getElementById("g_copiar").addEventListener("click", () => {
+    const ta = document.getElementById("g_linkOutput");
+    ta.select();
+    document.execCommand("copy");
+    const btn = document.getElementById("g_copiar");
+    btn.textContent = "¡Copiado!";
+    setTimeout(() => { btn.textContent = "Copiar link"; }, 1500);
+  });
+}
+
+function renderAcuerdo(params) {
+  const nombre = params.get("nombre") || "";
+  const dni = params.get("dni") || "";
+  const puesto = params.get("puesto") || "";
+  const actividadesRaw = params.get("actividades") || "";
+  const fecha = formatFecha(params.get("fecha") || "");
+  const horaInicio = params.get("horaInicio") || "";
+  const horaFin = params.get("horaFin") || "";
+  const local = params.get("local") || "";
+  const empresa = params.get("empresa") || "";
+  const modalidad = params.get("modalidad") || "";
+  const monto = params.get("monto") || "";
+
+  const actividadesHTML = actividadesRaw
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l.length > 0)
+    .map(l => `<li>${l}</li>`)
+    .join("");
+
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <h1>Acuerdo de participación y consentimiento</h1>
+      <p>Jornada de evaluación de candidato/a a un puesto de trabajo</p>
+    </div>
+    <div class="body">
+      <p>Entre <strong>${empresa}</strong> (en adelante, "la Empresa") y <strong>${nombre}</strong>, DNI N.° <strong>${dni}</strong> (en adelante, "el/la Postulante"), se acuerda lo siguiente:</p>
+
+      <h2>1. Objeto</h2>
+      <p>El/la Postulante participará de una instancia de evaluación práctica con el único fin de valorar sus aptitudes para el puesto de <strong>${puesto}</strong>. Esta instancia no implica oferta de empleo, contratación, ni generación de vínculo laboral. No se trata de un período de prueba en los términos del art. 92 bis de la LCT.</p>
+
+      <h2>2. Fecha, duración y compensación</h2>
+      <p>
+        Fecha: <strong>${fecha}</strong><br>
+        Horario: <strong>${horaInicio}${horaFin ? " a " + horaFin : ""}</strong><br>
+        Local: <strong>${local}</strong><br>
+        Modalidad de pago: <strong>${modalidad}</strong><br>
+        Monto: <strong>$${monto}</strong>
+      </p>
+      <div class="note">La duración de la evaluación no superará las 4 horas continuas.</div>
+
+      <h2>3. Actividades a realizar</h2>
+      <ul>${actividadesHTML}</ul>
+
+      <h2>4. Normas de conducta y seguridad</h2>
+      <p>El/la Postulante se compromete a respetar las instrucciones impartidas, mantener una conducta respetuosa con clientes, empleados y proveedores, utilizar correctamente los elementos de trabajo, y cumplir las normas internas de higiene y seguridad.</p>
+
+      <h2>5. Declaración del/de la Postulante</h2>
+      <p>El/la Postulante declara encontrarse en condiciones psicofísicas adecuadas para participar, informar cualquier limitación de salud relevante, y aceptar voluntariamente la evaluación, pudiendo retirarse en cualquier momento sin consecuencias para su postulación.</p>
+
+      <h2>6. Protección de datos</h2>
+      <p>Los datos personales suministrados serán utilizados exclusivamente para el proceso de selección, conforme a la Ley N.° 25.326 de Protección de los Datos Personales.</p>
+
+      <div class="confirm-box">
+        <h2 style="margin-top:0; border:none; padding:0;">Confirmación de aceptación</h2>
+        <p>Para confirmar tu participación, ingresá tu nombre completo y DNI tal como figuran arriba.</p>
+
+        <label>Nombre completo</label>
+        <input type="text" id="c_nombre" placeholder="Escribí tu nombre completo">
+
+        <label>DNI</label>
+        <input type="text" id="c_dni" placeholder="Escribí tu DNI">
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="c_acepto">
+          <label for="c_acepto">Leí y entendí las condiciones de esta evaluación, y acepto participar voluntariamente.</label>
+        </div>
+
+        <button id="c_confirmar">Confirmar participación</button>
+        <div class="error-text" id="c_error">Revisá que el nombre y DNI coincidan con los datos de arriba, y que hayas marcado la casilla de aceptación.</div>
+      </div>
+
+      <div class="sign-line">Documento generado digitalmente. La confirmación queda registrada con fecha y hora.</div>
+    </div>
+  `;
+
+  document.getElementById("c_confirmar").addEventListener("click", () => {
+    const cNombre = document.getElementById("c_nombre").value.trim();
+    const cDni = document.getElementById("c_dni").value.trim();
+    const acepto = document.getElementById("c_acepto").checked;
+    const errorEl = document.getElementById("c_error");
+
+    const nombreOk = cNombre.toLowerCase() === nombre.toLowerCase();
+    const dniOk = cDni.replace(/\D/g, "") === dni.replace(/\D/g, "");
+
+    if (!nombreOk || !dniOk || !acepto) {
+      errorEl.classList.add("show");
+      return;
+    }
+    errorEl.classList.remove("show");
+
+    const btn = document.getElementById("c_confirmar");
+    btn.disabled = true;
+    btn.textContent = "Enviando confirmación...";
+
+    const templateParams = {
+      candidato_nombre: nombre,
+      candidato_dni: dni,
+      puesto: puesto,
+      fecha: fecha,
+      horario: horaInicio + (horaFin ? " a " + horaFin : ""),
+      local: local,
+      compensacion: modalidad + " — $" + monto,
+      fecha_confirmacion: new Date().toLocaleString("es-AR")
+    };
+
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
+      .then(() => { renderSuccess(); })
+      .catch((err) => {
+        btn.disabled = false;
+        btn.textContent = "Confirmar participación";
+        alert("Hubo un problema al enviar. Probá nuevamente o avisale a la empresa por WhatsApp.");
+        console.error(err);
+      });
+  });
+}
+
+function renderSuccess() {
+  document.getElementById("app").innerHTML = `
+    <div class="header"><h1>Confirmación enviada</h1></div>
+    <div class="success-screen">
+      <p style="font-size:16px; font-weight:bold; color:#2E7D32;">Tu participación quedó confirmada.</p>
+      <p style="color:#666666;">Podés cerrar esta página. La empresa te va a contactar por WhatsApp.</p>
+    </div>
+  `;
+}
+
+function init() {
+  const params = getParams();
+  if (params.has("nombre") && params.has("dni")) {
+    renderAcuerdo(params);
+  } else {
+    renderGenerator();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
