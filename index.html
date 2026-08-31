@@ -41,15 +41,19 @@
   ul { font-size: 14px; line-height: 1.8; padding-left: 20px; margin-top: 8px; }
   .hint { font-size: 12px; color: #777; margin: 2px 0 4px; }
   .confirm-box { margin-top: 24px; padding: 16px; background: #f0f4f8; border-radius: 8px; border: 1px solid #d5dde5; }
-  .confirm-box h2 { margin-top: 0; border: none; padding: 0; }
-  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; }
-  .checkbox-row input { width: auto; margin-top: 3px; }
-  .checkbox-row label { margin: 0; font-size: 13px; color: #333; }
-  .error-text { color: #b00020; font-size: 13px; margin-top: 10px; display: none; }
+  .confirm-box h2 { margin-top: 0; border: none; padding: 0; font-size: 16px; }
+  .confirm-box p { margin-top: 6px; font-size: 13px; color: #555; }
+  .check-row { display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; }
+  .check-row input[type=checkbox] { width: auto; margin-top: 3px; flex-shrink: 0; }
+  .check-row label { margin: 0; font-size: 13px; color: #333; line-height: 1.5; }
+  .salud-detail { margin-top: 8px; margin-left: 26px; display: none; }
+  .salud-detail textarea { font-size: 13px; min-height: 60px; }
+  .error-text { color: #b00020; font-size: 13px; margin-top: 12px; display: none; }
   .error-text.show { display: block; }
   .success-screen { text-align: center; padding: 48px 24px; }
   .success-icon { font-size: 52px; margin-bottom: 12px; }
   .sign-line { margin-top: 28px; border-top: 1px solid #ddd; padding-top: 8px; font-size: 11px; color: #999; }
+  .section-divider { margin-top: 16px; border-top: 1px solid #e0e0e0; padding-top: 14px; }
 </style>
 </head>
 <body>
@@ -134,9 +138,7 @@ const EMPRESAS = {
 const PUESTOS = Object.keys(ACTIVIDADES);
 
 function getParams() { return new URLSearchParams(window.location.search); }
-function buildLink(data) {
-  return BASE_URL + "?" + new URLSearchParams(data).toString();
-}
+function buildLink(data) { return BASE_URL + "?" + new URLSearchParams(data).toString(); }
 function formatFecha(f) {
   if (!f) return "";
   const [y,m,d] = f.split("-");
@@ -151,11 +153,11 @@ function renderHeader(empresa, titulo, subtitulo) {
   return `<div class="${cfg.headerClass}">${logoHtml}<div><h1>${titulo}</h1>${subtitulo ? `<p>${subtitulo}</p>` : ""}</div></div>`;
 }
 
-// ─── GENERADOR ───────────────────────────────
+// ─── GENERADOR (vista interna) ────────────────
 function renderGenerator() {
-  const opcionesPuestos   = PUESTOS.map(p => `<option value="${p}">${p}</option>`).join("");
-  const opcionesEmpresas  = Object.keys(EMPRESAS).map(e => `<option value="${e}">${e}</option>`).join("");
-  const primerasActividades = ACTIVIDADES[PUESTOS[0]].join("\n");
+  const opcionesPuestos  = PUESTOS.map(p => `<option value="${p}">${p}</option>`).join("");
+  const opcionesEmpresas = Object.keys(EMPRESAS).map(e => `<option value="${e}">${e}</option>`).join("");
+  const primerasActs     = ACTIVIDADES[PUESTOS[0]].join("\n");
 
   document.getElementById("app").innerHTML = `
     ${renderHeader("Florinda", "Generador de acuerdo de evaluación laboral", "Completá los datos del candidato y la prueba")}
@@ -166,15 +168,12 @@ function renderGenerator() {
       <label>Nombre completo del candidato</label>
       <input type="text" id="g_nombre" placeholder="Juan Pérez">
 
-      <label>DNI</label>
-      <input type="text" id="g_dni" placeholder="30123456">
-
       <label>Puesto</label>
       <select id="g_puesto">${opcionesPuestos}</select>
 
       <label>Actividades a realizar</label>
       <p class="hint">Se cargan automáticamente según el puesto. Podés editarlas. Una por línea.</p>
-      <textarea id="g_actividades" rows="7">${primerasActividades}</textarea>
+      <textarea id="g_actividades" rows="7">${primerasActs}</textarea>
 
       <div class="field-row">
         <div><label>Fecha de la prueba</label><input type="date" id="g_fecha"></div>
@@ -223,7 +222,6 @@ function renderGenerator() {
 
   document.getElementById("g_generar").addEventListener("click", () => {
     const nombre     = document.getElementById("g_nombre").value.trim();
-    const dni        = document.getElementById("g_dni").value.trim();
     const puesto     = document.getElementById("g_puesto").value;
     const actividades= document.getElementById("g_actividades").value.trim();
     const fecha      = document.getElementById("g_fecha").value;
@@ -234,10 +232,10 @@ function renderGenerator() {
     const modalidad  = document.getElementById("g_modalidad").value;
     const monto      = document.getElementById("g_monto").value.trim();
 
-    if (!nombre||!dni||!fecha||!horaInicio||!local||!monto||!actividades) {
+    if (!nombre||!fecha||!horaInicio||!local||!monto||!actividades) {
       alert("Completá todos los campos antes de generar el link."); return;
     }
-    const link = buildLink({nombre,dni,puesto,actividades,fecha,horaInicio,horaFin,local,empresa,modalidad,monto});
+    const link = buildLink({nombre,puesto,actividades,fecha,horaInicio,horaFin,local,empresa,modalidad,monto});
     document.getElementById("g_linkOutput").value = link;
     document.getElementById("g_resultado").classList.add("show");
   });
@@ -254,7 +252,6 @@ function renderGenerator() {
 // ─── ACUERDO (vista candidato) ────────────────
 function renderAcuerdo(params) {
   const nombre     = params.get("nombre") || "";
-  const dni        = params.get("dni") || "";
   const puesto     = params.get("puesto") || "";
   const actRaw     = params.get("actividades") || "";
   const fecha      = formatFecha(params.get("fecha") || "");
@@ -271,7 +268,7 @@ function renderAcuerdo(params) {
   document.getElementById("app").innerHTML = `
     ${renderHeader(empresa, "Acuerdo de participación y consentimiento", "Jornada de evaluación de candidato/a a un puesto de trabajo")}
     <div class="body">
-      <p>Entre <strong>${empresa}</strong> (en adelante, "la Empresa") y <strong>${nombre}</strong>, DNI N.° <strong>${dni}</strong> (en adelante, "el/la Postulante"), se acuerda lo siguiente:</p>
+      <p>Entre <strong>${empresa}</strong> (en adelante, "la Empresa") y <strong>${nombre}</strong> (en adelante, "el/la Postulante"), se acuerda lo siguiente:</p>
 
       <h2 class="${cfg.h2Class}">1. Objeto</h2>
       <p>El/la Postulante participará de una instancia de evaluación práctica con el único fin de valorar sus aptitudes para el puesto de <strong>${puesto}</strong>. Esta instancia no implica oferta de empleo, contratación ni generación de vínculo laboral. No se trata de un período de prueba en los términos del art. 92 bis de la LCT.</p>
@@ -292,55 +289,123 @@ function renderAcuerdo(params) {
       <p>El/la Postulante se compromete a respetar las instrucciones impartidas, mantener una conducta respetuosa con clientes, empleados y proveedores, utilizar correctamente los elementos de trabajo, y cumplir las normas internas de higiene y seguridad.</p>
 
       <h2 class="${cfg.h2Class}">5. Declaración del/de la Postulante</h2>
-      <p>El/la Postulante declara encontrarse en condiciones psicofísicas adecuadas para participar, informar cualquier limitación de salud relevante, y aceptar voluntariamente la evaluación, pudiendo retirarse en cualquier momento sin consecuencias para su postulación.</p>
+      <p>El/la Postulante declara encontrarse en condiciones adecuadas para participar y acepta voluntariamente la evaluación, pudiendo retirarse en cualquier momento sin consecuencias para su postulación.</p>
 
       <h2 class="${cfg.h2Class}">6. Protección de datos</h2>
       <p>Los datos personales suministrados serán utilizados exclusivamente para el proceso de selección, conforme a la Ley N.° 25.326.</p>
 
       <div class="confirm-box">
-        <h2>Confirmación de aceptación</h2>
-        <p>Para confirmar tu participación, ingresá tu nombre completo y DNI tal como figuran arriba.</p>
-        <label>Nombre completo</label>
-        <input type="text" id="c_nombre" placeholder="Escribí tu nombre completo">
-        <label>DNI</label>
-        <input type="text" id="c_dni" placeholder="Escribí tu DNI">
-        <div class="checkbox-row">
-          <input type="checkbox" id="c_acepto">
-          <label for="c_acepto">Leí y entendí las condiciones de esta evaluación, y acepto participar voluntariamente.</label>
+        <h2>Completá tus datos y confirmá tu participación</h2>
+        <p>Leé el acuerdo completo antes de confirmar.</p>
+
+        <div class="section-divider">
+          <label>Nombre completo</label>
+          <input type="text" id="c_nombre" placeholder="Escribí tu nombre completo">
+
+          <label>DNI</label>
+          <input type="text" id="c_dni" placeholder="Número de DNI sin puntos">
         </div>
+
+        <div class="section-divider">
+          <p style="font-weight:bold; font-size:13px; color:#333;">Condición de salud</p>
+          <div class="check-row">
+            <input type="checkbox" id="c_salud_ok">
+            <label for="c_salud_ok">Declaro no tener limitaciones físicas ni de salud que puedan afectar mi participación en esta evaluación.</label>
+          </div>
+          <div class="check-row" style="margin-top:10px;">
+            <input type="checkbox" id="c_salud_tiene">
+            <label for="c_salud_tiene">Tengo una condición o limitación que quiero declarar:</label>
+          </div>
+          <div class="salud-detail" id="salud_detalle">
+            <textarea placeholder="Describí brevemente tu condición o limitación..."></textarea>
+          </div>
+        </div>
+
+        <div class="section-divider">
+          <p style="font-weight:bold; font-size:13px; color:#333;">Disponibilidad</p>
+          <div class="check-row">
+            <input type="checkbox" id="c_dias">
+            <label for="c_dias">Declaro tener disponibilidad para continuar la evaluación en los días siguientes al indicado, sin interrupciones ni compromisos previos que lo impidan. En caso de no poder continuar, me comprometo a avisarlo antes de presentarme.</label>
+          </div>
+          <div class="check-row" style="margin-top:10px;">
+            <input type="checkbox" id="c_horario">
+            <label for="c_horario">Declaro tener disponibilidad horaria para cubrir el puesto de <strong>${puesto}</strong> en el horario indicado de manera regular.</label>
+          </div>
+        </div>
+
+        <div class="section-divider">
+          <div class="check-row">
+            <input type="checkbox" id="c_acepto">
+            <label for="c_acepto">Leí y entendí las condiciones de esta evaluación, y acepto participar voluntariamente.</label>
+          </div>
+        </div>
+
         <button class="btn ${cfg.btnClass}" id="c_confirmar">Confirmar participación</button>
-        <div class="error-text" id="c_error">Revisá que el nombre y DNI coincidan con los datos de arriba, y que hayas marcado la casilla.</div>
+        <div class="error-text" id="c_error"></div>
       </div>
       <div class="sign-line">Documento generado digitalmente · Confirmación registrada con fecha y hora.</div>
     </div>
   `;
 
+  // Mostrar/ocultar campo de detalle de salud
+  document.getElementById("c_salud_tiene").addEventListener("change", function() {
+    document.getElementById("salud_detalle").style.display = this.checked ? "block" : "none";
+    if (this.checked) document.getElementById("c_salud_ok").checked = false;
+  });
+  document.getElementById("c_salud_ok").addEventListener("change", function() {
+    if (this.checked) {
+      document.getElementById("c_salud_tiene").checked = false;
+      document.getElementById("salud_detalle").style.display = "none";
+    }
+  });
+
   document.getElementById("c_confirmar").addEventListener("click", () => {
-    const cNombre = document.getElementById("c_nombre").value.trim();
-    const cDni    = document.getElementById("c_dni").value.trim();
-    const acepto  = document.getElementById("c_acepto").checked;
-    const errorEl = document.getElementById("c_error");
+    const cNombre   = document.getElementById("c_nombre").value.trim();
+    const cDni      = document.getElementById("c_dni").value.trim();
+    const saludOk   = document.getElementById("c_salud_ok").checked;
+    const saludTiene= document.getElementById("c_salud_tiene").checked;
+    const saludTexto= document.getElementById("salud_detalle").querySelector("textarea").value.trim();
+    const diasOk    = document.getElementById("c_dias").checked;
+    const horarioOk = document.getElementById("c_horario").checked;
+    const acepto    = document.getElementById("c_acepto").checked;
+    const errorEl   = document.getElementById("c_error");
 
-    const nombreOk = cNombre.toLowerCase() === nombre.toLowerCase();
-    const dniOk    = cDni.replace(/\D/g,"") === dni.replace(/\D/g,"");
+    // Validaciones
+    const errores = [];
+    if (!cNombre) errores.push("Ingresá tu nombre completo.");
+    if (!cDni || cDni.replace(/\D/g,"").length < 7) errores.push("Ingresá tu DNI.");
+    if (!saludOk && !saludTiene) errores.push("Completá la sección de condición de salud.");
+    if (saludTiene && !saludTexto) errores.push("Describí tu limitación de salud o marcá que no tenés ninguna.");
+    if (!diasOk) errores.push("Confirmá tu disponibilidad para los días siguientes.");
+    if (!horarioOk) errores.push("Confirmá tu disponibilidad horaria para el puesto.");
+    if (!acepto) errores.push("Aceptá las condiciones del acuerdo.");
 
-    if (!nombreOk || !dniOk || !acepto) { errorEl.classList.add("show"); return; }
+    if (errores.length > 0) {
+      errorEl.innerHTML = errores.map(e => `• ${e}`).join("<br>");
+      errorEl.classList.add("show");
+      return;
+    }
     errorEl.classList.remove("show");
 
     const btn = document.getElementById("c_confirmar");
     btn.disabled = true;
     btn.textContent = "Enviando confirmación...";
 
+    const saludDeclaracion = saludOk
+      ? "Sin limitaciones declaradas"
+      : `Limitación declarada: ${saludTexto}`;
+
     const ahora = new Date().toLocaleString("es-AR");
     const payload = {
-      candidato_nombre:   nombre,
-      candidato_dni:      dni,
+      candidato_nombre:   cNombre,
+      candidato_dni:      cDni,
       puesto:             puesto,
       fecha:              fecha,
       horario:            horaInicio + (horaFin ? " a " + horaFin : ""),
       local:              local,
       empresa:            empresa,
       compensacion:       modalidad + " — $" + monto,
+      salud:              saludDeclaracion,
       fecha_confirmacion: ahora
     };
 
@@ -353,7 +418,7 @@ function renderAcuerdo(params) {
 
     // 2. Enviar mail via EmailJS
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, payload)
-      .then(() => { renderSuccess(empresa); })
+      .then(() => { renderSuccess(empresa, cNombre); })
       .catch(err => {
         btn.disabled = false;
         btn.textContent = "Confirmar participación";
@@ -364,13 +429,14 @@ function renderAcuerdo(params) {
 }
 
 // ─── PANTALLA DE ÉXITO ───────────────────────
-function renderSuccess(empresa) {
+function renderSuccess(empresa, nombre) {
   document.getElementById("app").innerHTML = `
     ${renderHeader(empresa, "Confirmación enviada", "")}
     <div class="success-screen">
       <div class="success-icon">✅</div>
-      <p style="font-size:16px; font-weight:bold; color:#2E7D32;">Tu participación quedó confirmada.</p>
-      <p style="color:#666; margin-top:8px;">Podés cerrar esta página. Te vamos a contactar por WhatsApp.</p>
+      <p style="font-size:17px; font-weight:bold; color:#2E7D32; margin-bottom:12px;">¡Gracias, ${nombre}!</p>
+      <p style="color:#444; font-size:14px;">Tu participación quedó confirmada.</p>
+      <p style="color:#666; font-size:13px; margin-top:8px;">Podés cerrar esta página. Te vamos a contactar por WhatsApp con los detalles finales.</p>
     </div>
   `;
 }
@@ -378,7 +444,7 @@ function renderSuccess(empresa) {
 // ─── INIT ────────────────────────────────────
 function init() {
   const params = getParams();
-  if (params.has("nombre") && params.has("dni")) { renderAcuerdo(params); }
+  if (params.has("nombre") && params.has("fecha")) { renderAcuerdo(params); }
   else { renderGenerator(); }
 }
 init();
