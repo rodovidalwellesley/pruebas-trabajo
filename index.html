@@ -65,15 +65,14 @@
 const EMAILJS_SERVICE_ID = "service_6a5wx5h";
 const EMAILJS_TEMPLATE_ID = "template_awrsdrk";
 const EMAILJS_PUBLIC_KEY = "lyPHEcNzl1hqp9pzA";
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwmwyF-sCcgVFCI_yVPjN0gGcggow0jYoZffdQNNstji-295Pq_EpJSfiuU-PyNOAwS/exec";
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbz5_-uajh1WbZYsIDQOU9hkJgTMzVwJfCSIRpUJPidWEB4p04EUCHLkW_v6LX-Uk57B/exec";
 const BASE_URL = "https://rodovidalwellesley.github.io/pruebas-trabajo/";
-
+ 
 const LOGO_FLORINDA = BASE_URL + "flori.jpg";
 const LOGO_IPA      = BASE_URL + "ipa.jpg";
-
+ 
 emailjs.init(EMAILJS_PUBLIC_KEY);
-
-// ─── ACTIVIDADES POR PUESTO ───────────────────
+ 
 const ACTIVIDADES = {
   "Cajero/a": [
     "Manejo de caja registradora y sistema de cobros.",
@@ -132,14 +131,14 @@ const ACTIVIDADES = {
     "Cumplimiento de normas de higiene y manipulación de bebidas."
   ]
 };
-
+ 
 const EMPRESAS = {
   "Florinda": { logo: LOGO_FLORINDA, headerClass: "header-florinda", btnClass: "btn-florinda", h2Class: "florinda" },
   "IPA":      { logo: LOGO_IPA,     headerClass: "header-ipa",      btnClass: "btn-ipa",      h2Class: "ipa" }
 };
-
+ 
 const PUESTOS = Object.keys(ACTIVIDADES);
-
+ 
 function getParams() { return new URLSearchParams(window.location.search); }
 function buildLink(data) { return BASE_URL + "?" + new URLSearchParams(data).toString(); }
 function formatFecha(f) {
@@ -159,38 +158,31 @@ function renderHeader(empresa, titulo, subtitulo) {
   const logoHtml = cfg.logo ? `<img src="${cfg.logo}" alt="${empresa}">` : "";
   return `<div class="${cfg.headerClass}">${logoHtml}<div><h1>${titulo}</h1>${subtitulo ? `<p>${subtitulo}</p>` : ""}</div></div>`;
 }
-
-// ─── GENERADOR ───────────────────────────────
+ 
 function renderGenerator() {
   const opcionesPuestos  = PUESTOS.map(p => `<option value="${p}">${p}</option>`).join("");
   const opcionesEmpresas = Object.keys(EMPRESAS).map(e => `<option value="${e}">${e}</option>`).join("");
   const primerasActs     = ACTIVIDADES[PUESTOS[0]].join("\n");
-
+ 
   document.getElementById("app").innerHTML = `
     ${renderHeader("Florinda", "Generador de acuerdo de evaluación laboral", "Completá los datos del candidato y la prueba")}
     <div class="body">
       <label>Empresa</label>
       <select id="g_empresa">${opcionesEmpresas}</select>
-
       <label>Nombre completo del candidato</label>
       <input type="text" id="g_nombre" placeholder="Juan Pérez">
-
       <label>Puesto</label>
       <select id="g_puesto">${opcionesPuestos}</select>
-
       <label>Actividades a realizar</label>
       <p class="hint">Se cargan automáticamente según el puesto. Podés editarlas. Una por línea.</p>
       <textarea id="g_actividades" rows="7">${primerasActs}</textarea>
-
       <div class="field-row">
         <div><label>Fecha de la prueba</label><input type="date" id="g_fecha"></div>
         <div><label>Horario de inicio</label><input type="time" id="g_horaInicio"></div>
         <div><label>Horario de fin</label><input type="time" id="g_horaFin"></div>
       </div>
-
       <label>Local / Establecimiento</label>
       <input type="text" id="g_local" placeholder="Florinda Acoyte">
-
       <div class="field-row">
         <div>
           <label>Modalidad de pago</label>
@@ -203,15 +195,12 @@ function renderGenerator() {
         </div>
         <div><label>Monto ($)</label><input type="text" id="g_monto" placeholder="10000"></div>
       </div>
-
       <label>Confirmar antes de (fecha)</label>
       <div class="field-row">
         <div><input type="date" id="g_limiteFecha"></div>
-        <div><input type="time" id="g_limiteHora" placeholder="Hora límite"></div>
+        <div><input type="time" id="g_limiteHora"></div>
       </div>
-
       <button class="btn btn-florinda" id="g_generar">Generar link para el candidato</button>
-
       <div class="result-box" id="g_resultado">
         <strong>✅ Link generado — copialo y mandalo por WhatsApp:</strong>
         <textarea id="g_linkOutput" readonly></textarea>
@@ -219,7 +208,7 @@ function renderGenerator() {
       </div>
     </div>
   `;
-
+ 
   document.getElementById("g_empresa").addEventListener("change", function() {
     const cfg = getEmpresaConfig(this.value);
     const logoHtml = cfg.logo ? `<img src="${cfg.logo}" alt="${this.value}">` : "";
@@ -228,12 +217,12 @@ function renderGenerator() {
     header.innerHTML = `${logoHtml}<div><h1>Generador de acuerdo de evaluación laboral</h1><p>Completá los datos del candidato y la prueba</p></div>`;
     document.getElementById("g_generar").className = `btn ${cfg.btnClass}`;
   });
-
+ 
   document.getElementById("g_puesto").addEventListener("change", function() {
     const acts = ACTIVIDADES[this.value];
     if (acts) document.getElementById("g_actividades").value = acts.join("\n");
   });
-
+ 
   document.getElementById("g_generar").addEventListener("click", () => {
     const nombre      = document.getElementById("g_nombre").value.trim();
     const puesto      = document.getElementById("g_puesto").value;
@@ -247,7 +236,6 @@ function renderGenerator() {
     const monto       = document.getElementById("g_monto").value.trim();
     const limiteFecha = document.getElementById("g_limiteFecha").value;
     const limiteHora  = document.getElementById("g_limiteHora").value;
-
     if (!nombre||!fecha||!horaInicio||!local||!monto||!actividades) {
       alert("Completá todos los campos obligatorios antes de generar el link."); return;
     }
@@ -255,7 +243,7 @@ function renderGenerator() {
     document.getElementById("g_linkOutput").value = link;
     document.getElementById("g_resultado").classList.add("show");
   });
-
+ 
   document.getElementById("g_copiar").addEventListener("click", () => {
     const ta = document.getElementById("g_linkOutput");
     ta.select(); document.execCommand("copy");
@@ -264,8 +252,7 @@ function renderGenerator() {
     setTimeout(() => { btn.textContent = "Copiar link"; }, 1500);
   });
 }
-
-// ─── ACUERDO (vista candidato) ────────────────
+ 
 function renderAcuerdo(params) {
   const nombre      = params.get("nombre") || "";
   const puesto      = params.get("puesto") || "";
@@ -280,58 +267,55 @@ function renderAcuerdo(params) {
   const limiteFecha = params.get("limiteFecha") || "";
   const limiteHora  = params.get("limiteHora") || "";
   const cfg         = getEmpresaConfig(empresa);
-
+ 
   const actHTML = actRaw.split("\n").map(l=>l.trim()).filter(l=>l).map(l=>`<li>${l}</li>`).join("");
-
   const deadlineHTML = (limiteFecha || limiteHora)
     ? `<div class="deadline-box">
         Te pedimos que confirmes tu participación antes del <strong>${formatFechaHora(limiteFecha, limiteHora)}</strong>.<br>
         Para poder organizarnos, en caso de no recibir tu respuesta en ese plazo avanzaremos con la cobertura del puesto.
        </div>`
     : "";
-
+ 
   document.getElementById("app").innerHTML = `
     ${renderHeader(empresa, "Acuerdo de participación y consentimiento", "Jornada de evaluación de candidato/a a un puesto de trabajo")}
     <div class="body">
       <p>Entre <strong>${empresa}</strong> y <strong>${nombre}</strong> (en adelante, "el/la Postulante"), se acuerda lo siguiente:</p>
-
+ 
       <h2 class="${cfg.h2Class}">1. Objeto</h2>
       <p>El/la Postulante participará de una instancia de evaluación práctica con el único fin de valorar sus aptitudes para el puesto de <strong>${puesto}</strong>. Esta instancia no implica oferta de empleo, contratación ni generación de vínculo laboral. No se trata de un período de prueba en los términos del art. 92 bis de la LCT.</p>
-
+ 
       <h2 class="${cfg.h2Class}">2. Fecha, duración y compensación</h2>
-      <p>
-        Fecha: <strong>${fecha}</strong><br>
-        Horario: <strong>${horaInicio}${horaFin ? " a " + horaFin : ""}</strong><br>
-        Local: <strong>${local}</strong><br>
-        Modalidad de pago: <strong>${modalidad}</strong><br>
-        Monto: <strong>$${monto}</strong>
-      </p>
-
+      <p>Fecha: <strong>${fecha}</strong><br>
+      Horario: <strong>${horaInicio}${horaFin ? " a " + horaFin : ""}</strong><br>
+      Local: <strong>${local}</strong><br>
+      Modalidad de pago: <strong>${modalidad}</strong><br>
+      Monto: <strong>$${monto}</strong></p>
+ 
       <h2 class="${cfg.h2Class}">3. Actividades a realizar</h2>
       <ul>${actHTML}</ul>
-
+ 
       <h2 class="${cfg.h2Class}">4. Normas de conducta y seguridad</h2>
       <p>El/la Postulante se compromete a respetar las instrucciones impartidas, mantener una conducta respetuosa con clientes, empleados y proveedores, utilizar correctamente los elementos de trabajo, y cumplir las normas internas de higiene y seguridad.</p>
-
+ 
       <h2 class="${cfg.h2Class}">5. Declaración del/de la Postulante</h2>
       <p>El/la Postulante declara encontrarse en condiciones adecuadas para participar y acepta voluntariamente la evaluación, pudiendo retirarse en cualquier momento sin consecuencias para su postulación.</p>
-
+ 
       <h2 class="${cfg.h2Class}">6. Protección de datos</h2>
       <p>Los datos personales suministrados serán utilizados exclusivamente para el proceso de selección, conforme a la Ley N.° 25.326.</p>
-
+ 
       ${deadlineHTML}
-
+ 
       <div class="confirm-box">
         <h2>Completá tus datos y confirmá tu participación</h2>
         <p>Leé el acuerdo completo antes de confirmar.</p>
-
+ 
         <div class="section-divider">
           <label>Nombre completo</label>
           <input type="text" id="c_nombre" placeholder="Escribí tu nombre completo">
           <label>DNI</label>
           <input type="text" id="c_dni" placeholder="Número de DNI sin puntos">
         </div>
-
+ 
         <div class="section-divider">
           <p class="section-label">Condición de salud</p>
           <div class="check-row">
@@ -346,7 +330,7 @@ function renderAcuerdo(params) {
             <textarea id="c_salud_texto" placeholder="Describí brevemente tu condición o limitación..."></textarea>
           </div>
         </div>
-
+ 
         <div class="section-divider">
           <p class="section-label">Disponibilidad</p>
           <div class="check-row">
@@ -358,21 +342,21 @@ function renderAcuerdo(params) {
             <label for="c_horario">Declaro tener disponibilidad horaria para cubrir el puesto de <strong>${puesto}</strong> en el horario indicado de manera regular.</label>
           </div>
         </div>
-
+ 
         <div class="section-divider">
           <div class="check-row">
             <input type="checkbox" id="c_acepto">
             <label for="c_acepto">Leí y entendí las condiciones de esta evaluación, y acepto participar voluntariamente.</label>
           </div>
         </div>
-
+ 
         <button class="btn ${cfg.btnClass}" id="c_confirmar">Confirmar participación</button>
         <div class="error-text" id="c_error"></div>
       </div>
       <div class="sign-line">Documento generado digitalmente · Confirmación registrada con fecha y hora.</div>
     </div>
   `;
-
+ 
   document.getElementById("c_salud_tiene").addEventListener("change", function() {
     document.getElementById("salud_detalle").style.display = this.checked ? "block" : "none";
     if (this.checked) document.getElementById("c_salud_ok").checked = false;
@@ -383,7 +367,7 @@ function renderAcuerdo(params) {
       document.getElementById("salud_detalle").style.display = "none";
     }
   });
-
+ 
   document.getElementById("c_confirmar").addEventListener("click", () => {
     const cNombre    = document.getElementById("c_nombre").value.trim();
     const cDni       = document.getElementById("c_dni").value.trim();
@@ -394,7 +378,7 @@ function renderAcuerdo(params) {
     const horarioOk  = document.getElementById("c_horario").checked;
     const acepto     = document.getElementById("c_acepto").checked;
     const errorEl    = document.getElementById("c_error");
-
+ 
     const errores = [];
     if (!cNombre) errores.push("Ingresá tu nombre completo.");
     if (!cDni || cDni.replace(/\D/g,"").length < 7) errores.push("Ingresá tu DNI.");
@@ -403,21 +387,21 @@ function renderAcuerdo(params) {
     if (!diasOk) errores.push("Confirmá tu disponibilidad para los días siguientes.");
     if (!horarioOk) errores.push("Confirmá tu disponibilidad horaria para el puesto.");
     if (!acepto) errores.push("Aceptá las condiciones del acuerdo.");
-
+ 
     if (errores.length > 0) {
       errorEl.innerHTML = errores.map(e => `• ${e}`).join("<br>");
       errorEl.classList.add("show");
       return;
     }
     errorEl.classList.remove("show");
-
+ 
     const btn = document.getElementById("c_confirmar");
     btn.disabled = true;
     btn.textContent = "Enviando confirmación...";
-
+ 
     const saludDeclaracion = saludOk ? "Sin limitaciones declaradas" : `Limitación declarada: ${saludTexto}`;
     const ahora = new Date().toLocaleString("es-AR");
-
+ 
     const payload = {
       candidato_nombre:   cNombre,
       candidato_dni:      cDni,
@@ -430,13 +414,13 @@ function renderAcuerdo(params) {
       salud:              saludDeclaracion,
       fecha_confirmacion: ahora
     };
-
+ 
     fetch(SHEETS_URL, {
       method:  "POST",
       headers: { "Content-Type": "text/plain" },
       body:    JSON.stringify(payload)
     }).catch(err => console.warn("Sheets error:", err));
-
+ 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, payload)
       .then(() => { renderSuccess(empresa, cNombre); })
       .catch(err => {
@@ -447,8 +431,7 @@ function renderAcuerdo(params) {
       });
   });
 }
-
-// ─── PANTALLA DE ÉXITO ───────────────────────
+ 
 function renderSuccess(empresa, nombre) {
   document.getElementById("app").innerHTML = `
     ${renderHeader(empresa, "Confirmación enviada", "")}
@@ -460,13 +443,17 @@ function renderSuccess(empresa, nombre) {
     </div>
   `;
 }
-
-// ─── INIT ────────────────────────────────────
+ 
 function init() {
   const params = getParams();
   if (params.has("nombre") && params.has("fecha")) { renderAcuerdo(params); }
   else { renderGenerator(); }
 }
+init();
+</script>
+</body>
+</html>
+ 
 init();
 </script>
 </body>
